@@ -295,10 +295,29 @@
             .assessment-grid {
                 grid-template-columns: 1fr;
             }
+            .home-btn{
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+  text-decoration: none;
+  color:#fff;
+  background:#006400;
+  border:1px solid #0A5C0A;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-weight:600;
+  box-shadow: 0 6px 18px rgba(0,0,0,.15);
+  transition: background .15s ease, transform .12s ease;
+}
+.home-btn:hover{ background:#0A5C0A; transform: translateY(-1px); }
+.home-btn:active{ transform: translateY(0); }
+
         }
     </style>
 </head>
 <body>
+    <a class="home-btn" href="index.html">← Home</a>
     <div class="container">
         <div class="header">
             <button class="reset-btn" onclick="location.reload()">Reset Workflow</button>
