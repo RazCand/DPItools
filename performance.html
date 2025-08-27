@@ -113,6 +113,28 @@
             animation: pulse 1.5s infinite;
         }
 
+.home-btn{
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+  text-decoration: none;
+  color:#fff;
+  background: linear-gradient(135deg, #3498db, #2980b9); /* performance blue */
+  border:1px solid #217dbb;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight:600;
+  box-shadow: 0 6px 18px rgba(0,0,0,.15);
+  transition: background .15s ease, transform .12s ease;
+}
+.home-btn:hover{ 
+  background: linear-gradient(135deg, #2980b9, #1f6699); 
+  transform: translateY(-1px); 
+}
+.home-btn:active{ transform: translateY(0); }
+
+
         @keyframes pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
             70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
@@ -295,24 +317,6 @@
             .assessment-grid {
                 grid-template-columns: 1fr;
             }
-            .home-btn{
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 1000;
-  text-decoration: none;
-  color:#fff;
-  background:#006400;
-  border:1px solid #0A5C0A;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-weight:600;
-  box-shadow: 0 6px 18px rgba(0,0,0,.15);
-  transition: background .15s ease, transform .12s ease;
-}
-.home-btn:hover{ background:#0A5C0A; transform: translateY(-1px); }
-.home-btn:active{ transform: translateY(0); }
-
         }
     </style>
 </head>
