@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Management Workflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            height: 100%;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .reset-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .reset-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .workflow-container {
+            padding: 40px;
+            position: relative;
+        }
+
+        .step {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+            border-color: #3498db;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.2);
+            transform: scale(1.02);
+        }
+
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: 20px;
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9em;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+        }
+
+        .step-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        .step-content {
+            color: #555;
+            line-height: 1.6;
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        .decision-panel {
+            background: linear-gradient(135deg, #f8f9fa, #ffffff);
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .decision-title {
+            font-weight: 600;
+            color: #343a40;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .assessment-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .assessment-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .assessment-label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #495057;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s ease;
+        }
+
+        .radio-option:hover {
+            background: #f8f9fa;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .btn-back {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumb {
+            background: #f8f9fa;
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+
+        .breadcrumb-current {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        .outcome-panel {
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .outcome-panel.high {
+            background: linear-gradient(135deg, #f8d7da, #ffffff);
+            border: 2px solid #e74c3c;
+            color: #c0392b;
+        }
+
+        .notification-panel {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .stakeholder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stakeholder {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .workflow-container {
+                padding: 20px;
+            }
+            
+            .assessment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="reset-btn" onclick="location.reload()">Reset Workflow</button>
+            <h1>Performance Management Workflow</h1>
+            <p>Follow the interactive steps to determine the appropriate response</p>
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+        </div>
+
+        <div class="workflow-container">
+            <div class="breadcrumb">
+                <span class="breadcrumb-current">Start: Problem Identification</span>
+            </div>
+
+            <!-- Step 1: Problem Identification -->
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-title">Problem Identified</div>
+                <div class="step-content">
+                    A supplier-related issue has been identified. Begin the assessment process to determine the appropriate response level.
+                </div>
+                
+                <div class="decision-panel">
+                    <div class="decision-title">Assessment Questions</div>
+                    <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9em;">
+                        <strong>Note:</strong> Immediate action (Step 2) is only required for Critical impact OR High impact with High/Extreme repeatability.
+                    </div>
+                    <div class="assessment-grid">
+                        <div class="assessment-item">
+                            <div class="assessment-label">What is the Impact Level?</div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="impact" value="low" onchange="checkStep1()">
+                                    <span>Low - Minor disruption, limited scope</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="impact" value="moderate" onchange="checkStep1()">
+                                    <span>Moderate - Noticeable impact, affects operations</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="impact" value="high" onchange="checkStep1()">
+                                    <span>High - Significant disruption, major concerns</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="impact" value="critical" onchange="checkStep1()">
+                                    <span>Critical - Severe impact, immediate risk</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="assessment-item">
+                            <div class="assessment-label">What is the Repeatability?</div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="repeatability" value="low" onchange="checkStep1()">
+                                    <span>Low - Unlikely to happen again</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="repeatability" value="moderate" onchange="checkStep1()">
+                                    <span>Moderate - Could happen again</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="repeatability" value="high" onchange="checkStep1()">
+                                    <span>High - Likely to recur</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="repeatability" value="extreme" onchange="checkStep1()">
+                                    <span>Extreme - Will definitely happen again</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-buttons">
+                        <button class="btn btn-primary" id="assessBtn" disabled onclick="assessProblem()">
+                            Assess Problem & Continue
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Immediate Action -->
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-title">Take Immediate Action</div>
+                <div class="step-content">
+                    <strong>Critical issue detected!</strong> Immediate action is required to ensure safety and prevent further damage.
+                </div>
+                
+                <div class="outcome-panel high">
+                    <h3>🚨 Immediate Actions Required:</h3>
+                    <ul style="text-align: left; margin-top: 15px;">
+                        <li>Consider immediate suspension of work</li>
+                        <li>Ensure safety of people and property</li>
+                        <li>Implement measures to mitigate further losses</li>
+                        <li>Document all actions taken</li>
+                    </ul>
+                </div>
+                
+                <div class="notification-panel">
+                    <h3>📢 Immediate Notification Required:</h3>
+                    <div class="stakeholder-grid">
+                        <div class="stakeholder">Scope Owner (SO)</div>
+                        <div class="stakeholder">Contract Owner (CO)</div>
+                        <div class="stakeholder">Relationship Manager (RM)</div>
+                        <div class="stakeholder">Contract Administrator (CA)</div>
+                        <div class="stakeholder">Key Stakeholders</div>
+                        <div class="stakeholder">Supplier</div>
+                    </div>
+                </div>
+                
+                <div class="nav-buttons">
+                    <button class="btn btn-primary" onclick="showStep('step3')">
+                        Actions Completed - Continue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 3: Documentation -->
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-title">Complete Documentation</div>
+                <div class="step-content">
+                    <strong>Documentation is required for ALL issues entering the SRM framework.</strong> This ensures proper tracking and compliance regardless of severity level.
+                </div>
+                
+                <div class="decision-panel">
+                    <div class="decision-title">Required Documentation:</div>
+                    <div style="text-align: left;">
+                        <label style="display: block; margin: 10px 0; cursor: pointer;">
+                            <input type="checkbox" id="ncp" onchange="checkStep3()" style="margin-right: 10px;">
+                            Complete Supplier Non-Conformance Process (NCP)
+                        </label>
+                        <label style="display: block; margin: 10px 0; cursor: pointer;">
+                            <input type="checkbox" id="ncr" onchange="checkStep3()" style="margin-right: 10px;">
+                            Submit Supplier Non-Conformance Report (NCR)
+                        </label>
+                        <label style="display: block; margin: 10px 0; cursor: pointer;">
+                            <input type="checkbox" id="notify" onchange="checkStep3()" style="margin-right: 10px;">
+                            Send information to Contract Administrator
+                        </label>
+                    </div>
+                    
+                    <div class="nav-buttons">
+                        <button class="btn btn-back" onclick="goBack()">← Back</button>
+                        <button class="btn btn-primary" id="docBtn" disabled onclick="showStep('step4')">
+                            Documentation Complete
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: Performance Management Decision -->
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-title">Determine Performance Management Level</div>
+                <div class="step-content">
+                    <strong>Decision Guidance:</strong> Consider cumulative problems, supplier history, and complexity when selecting the appropriate level.
+                </div>
+                
+                <div class="decision-panel">
+                    <div class="decision-title">Additional Assessment Questions</div>
+                    <div class="assessment-grid">
+                        <div class="assessment-item">
+                            <div class="assessment-label">Is this a cumulative problem?</div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="cumulative" value="first" onchange="checkStep4()">
+                                    <span>First occurrence of this type of issue</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="cumulative" value="recurring" onchange="checkStep4()">
+                                    <span>Similar issues have occurred before</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="cumulative" value="pattern" onchange="checkStep4()">
+                                    <span>Part of an ongoing pattern of problems</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="assessment-item">
+                            <div class="assessment-label">Supplier's previous performance?</div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="history" value="good" onchange="checkStep4()">
+                                    <span>Generally good performer</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="history" value="mixed" onchange="checkStep4()">
+                                    <span>Mixed performance record</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="history" value="poor" onchange="checkStep4()">
+                                    <span>History of performance issues</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="nav-buttons">
+                        <button class="btn btn-back" onclick="goBack()">← Back</button>
+                        <button class="btn btn-primary" id="guidanceBtn" disabled onclick="showRecommendations()">
+                            Get Recommendations
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="recommendations" style="display: none; margin-top: 30px;">
+                    <div class="decision-title">Select Your Approach:</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
+                        <div onclick="selectLevel('informal')" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; padding: 20px; border-radius: 12px; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <h3>Informal Performance Improvement</h3>
+                            <p style="margin: 10px 0;">Internal plan and supplier conversation</p>
+                            <small>Approval: RM, CO, C&PM</small>
+                        </div>
+                        <div onclick="selectLevel('formal')" style="background: linear-gradient(135deg, #f39c12, #e67e22); color: white; padding: 20px; border-radius: 12px; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <h3>Formal Performance Improvement</h3>
+                            <p style="margin: 10px 0;">Written plan linked to contract</p>
+                            <small>Approval: RM, CO, C&PM</small>
+                        </div>
+                        <div onclick="selectLevel('breach')" style="background: linear-gradient(135deg, #e74c3c, #c0392b); color: white; padding: 20px; border-radius: 12px; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <h3>Contractual Breach Notice</h3>
+                            <p style="margin: 10px 0;">Formal warning with legal consultation</p>
+                            <small>Approval: Executive Manager + Legal</small>
+                        </div>
+                        <div onclick="selectLevel('terminate')" style="background: linear-gradient(135deg, #2c3e50, #34495e); color: white; padding: 20px; border-radius: 12px; cursor: pointer; text-align: center; transition: transform 0.3s;">
+                            <h3>Contract Termination</h3>
+                            <p style="margin: 10px 0;">End relationship and revoke qualification</p>
+                            <small>Approval: Executive Manager + Legal</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Step -->
+            <div class="step" id="success">
+                <div class="step-number">✓</div>
+                <div class="step-title">Workflow Complete</div>
+                <div class="step-content" id="successContent">
+                    <!-- Will be populated based on selection -->
+                </div>
+                
+                <div class="nav-buttons">
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        Start New Assessment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple global variables
+        let currentStep = 'step1';
+        let stepHistory = ['step1'];
+        let assessmentData = {};
+
+        // Simple validation functions
+        function checkStep1() {
+            const impact = document.querySelector('input[name="impact"]:checked');
+            const repeatability = document.querySelector('input[name="repeatability"]:checked');
+            const btn = document.getElementById('assessBtn');
+            
+            if (impact && repeatability) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+        }
+
+        function checkStep3() {
+            const ncp = document.getElementById('ncp').checked;
+            const ncr = document.getElementById('ncr').checked;
+            const notify = document.getElementById('notify').checked;
+            const btn = document.getElementById('docBtn');
+            
+            if (ncp && ncr && notify) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+        }
+
+        function checkStep4() {
+            const cumulative = document.querySelector('input[name="cumulative"]:checked');
+            const history = document.querySelector('input[name="history"]:checked');
+            const btn = document.getElementById('guidanceBtn');
+            
+            if (cumulative && history) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+            }
+        }
+
+        // Assessment function
+        function assessProblem() {
+            const impact = document.querySelector('input[name="impact"]:checked').value;
+            const repeatability = document.querySelector('input[name="repeatability"]:checked').value;
+            
+            assessmentData.impact = impact;
+            assessmentData.repeatability = repeatability;
+            
+            console.log('Assessment data:', { impact, repeatability });
+            
+            // Step 2 (Immediate Action) ONLY for truly critical combinations:
+            // - Critical impact with ANY repeatability, OR
+            // - High impact with High/Extreme repeatability
+            const shouldShowStep2 = (impact === 'critical') || 
+                                   (impact === 'high' && (repeatability === 'high' || repeatability === 'extreme'));
+            
+            console.log('Should show Step 2?', shouldShowStep2);
+            
+            if (shouldShowStep2) {
+                console.log('GOING TO STEP 2 - Immediate Action Required');
+                showStep('step2');
+            } else {
+                console.log('GOING TO STEP 3 - Standard Documentation');
+                showStep('step3');
+            }
+        }
+
+        // Show recommendations with intelligent suggestions
+        function showRecommendations() {
+            const cumulative = document.querySelector('input[name="cumulative"]:checked').value;
+            const history = document.querySelector('input[name="history"]:checked').value;
+            
+            assessmentData.cumulative = cumulative;
+            assessmentData.history = history;
+            
+            // Calculate recommendation based on all factors
+            const recommendation = calculateRecommendation();
+            
+            const recommendationsDiv = document.getElementById('recommendations');
+            recommendationsDiv.innerHTML = `
+                <div class="outcome-panel" style="background: linear-gradient(135deg, #e8f4fd, #ffffff); border: 2px solid #3498db; color: #2980b9; margin-bottom: 20px;">
+                    <h3>🎯 Recommended Approach: ${recommendation.title}</h3>
+                    <p><strong>Rationale:</strong> ${recommendation.rationale}</p>
+                    <p style="margin-top: 10px;"><strong>Risk Level:</strong> ${recommendation.riskLevel}</p>
+                </div>
+                
+                <div class="decision-title">Available Performance Management Options:</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin: 20px 0;">
+                    ${generateLevelCards(recommendation)}
+                </div>
+            `;
+            
+            recommendationsDiv.style.display = 'block';
+        }
+
+        // Calculate recommendation based on assessment data
+        function calculateRecommendation() {
+            const { impact, repeatability, cumulative, history } = assessmentData;
+            
+            let score = 0;
+            
+            // Impact scoring
+            if (impact === 'critical') score += 4;
+            else if (impact === 'high') score += 3;
+            else if (impact === 'moderate') score += 2;
+            else score += 1;
+            
+            // Repeatability scoring
+            if (repeatability === 'extreme') score += 4;
+            else if (repeatability === 'high') score += 3;
+            else if (repeatability === 'moderate') score += 2;
+            else score += 1;
+            
+            // Cumulative problems scoring
+            if (cumulative === 'pattern') score += 3;
+            else if (cumulative === 'recurring') score += 2;
+            else score += 1;
+            
+            // History scoring
+            if (history === 'poor') score += 3;
+            else if (history === 'mixed') score += 2;
+            else score += 1;
+            
+            console.log('Recommendation scoring:', { impact, repeatability, cumulative, history, totalScore: score });
+            
+            // Determine recommendation based on total score
+            if (score <= 6) {
+                return {
+                    level: 'informal',
+                    title: 'Informal Performance Improvement',
+                    riskLevel: 'Low Risk',
+                    rationale: 'Low overall risk profile suggests a collaborative approach will be most effective.'
+                };
+            } else if (score <= 9) {
+                return {
+                    level: 'formal',
+                    title: 'Formal Performance Improvement',
+                    riskLevel: 'Moderate Risk',
+                    rationale: 'Moderate risk requires formal documentation and structured approach with clear accountability.'
+                };
+            } else if (score <= 12) {
+                return {
+                    level: 'breach',
+                    title: 'Contractual Breach Notice',
+                    riskLevel: 'High Risk',
+                    rationale: 'High risk and/or cumulative issues require legal intervention and formal warnings.'
+                };
+            } else {
+                return {
+                    level: 'terminate',
+                    title: 'Contract Termination',
+                    riskLevel: 'Critical Risk',
+                    rationale: 'Critical risk profile with pattern of failures indicates the relationship is not viable.'
+                };
+            }
+        }
+
+        // Generate level cards with recommendation highlighting
+        function generateLevelCards(recommendation) {
+            const levels = [
+                { id: 'informal', title: 'Informal Performance Improvement', desc: 'Internal plan and supplier conversation', approval: 'RM, CO, C&PM', color: 'linear-gradient(135deg, #3498db, #2980b9)' },
+                { id: 'formal', title: 'Formal Performance Improvement', desc: 'Written plan linked to contract', approval: 'RM, CO, C&PM', color: 'linear-gradient(135deg, #f39c12, #e67e22)' },
+                { id: 'breach', title: 'Contractual Breach Notice', desc: 'Formal warning with legal consultation', approval: 'Executive Manager + Legal', color: 'linear-gradient(135deg, #e74c3c, #c0392b)' },
+                { id: 'terminate', title: 'Contract Termination', desc: 'End relationship and revoke qualification', approval: 'Executive Manager + Legal', color: 'linear-gradient(135deg, #2c3e50, #34495e)' }
+            ];
+            
+            return levels.map(level => {
+                const isRecommended = level.id === recommendation.level;
+                const recommendedStyle = isRecommended ? 
+                    'border: 3px solid #f1c40f; box-shadow: 0 0 20px rgba(241, 196, 15, 0.5); position: relative;' : '';
+                
+                const recommendedBadge = isRecommended ? 
+                    '<div style="position: absolute; top: -10px; right: -10px; background: #f1c40f; color: #2c3e50; padding: 5px 10px; border-radius: 15px; font-size: 0.8em; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">RECOMMENDED</div>' : '';
+                
+                const guidance = getGuidanceText(level.id);
+                
+                return `
+                    <div onclick="selectLevel('${level.id}')" 
+                         style="background: ${level.color}; color: white; padding: 20px; border-radius: 12px; cursor: pointer; text-align: center; transition: transform 0.3s; ${recommendedStyle}"
+                         onmouseover="this.style.transform='translateY(-5px) scale(1.02)'"
+                         onmouseout="this.style.transform='translateY(0) scale(1)'">
+                        ${recommendedBadge}
+                        <h3>${level.title}</h3>
+                        <p style="margin: 10px 0;">${level.desc}</p>
+                        <div style="font-size: 0.9em; margin: 10px 0; opacity: 0.9;">
+                            <strong>When to use:</strong> ${guidance}
+                        </div>
+                        <small style="opacity: 0.8;">Approval: ${level.approval}</small>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Get guidance text for each level
+        function getGuidanceText(level) {
+            const guidance = {
+                informal: 'First-time issues, good supplier history, low-moderate impact, cooperative supplier',
+                formal: 'Recurring issues, mixed history, moderate-high impact, previous informal attempts unsuccessful',
+                breach: 'Pattern of problems, poor history, high impact, formal plans have failed',
+                terminate: 'Critical impact, extreme repeatability, consistently poor performance, all other methods exhausted'
+            };
+            return guidance[level];
+        }
+
+        // Level selection
+        function selectLevel(level) {
+            assessmentData.level = level;
+            
+            const levelTitles = {
+                informal: 'Informal Performance Improvement Plan',
+                formal: 'Formal Performance Improvement Plan', 
+                breach: 'Contractual Breach Notice',
+                terminate: 'Contract Termination'
+            };
+            
+            const content = `
+                <div class="outcome-panel" style="background: linear-gradient(135deg, #d5f4e6, #ffffff); border: 2px solid #27ae60; color: #27ae60;">
+                    <h3>✅ ${levelTitles[level]} Selected</h3>
+                    <p>Your assessment has determined the appropriate performance management approach.</p>
+                    <p><strong>Next Steps:</strong> Implement the selected performance management strategy and monitor progress.</p>
+                </div>
+            `;
+            
+            document.getElementById('successContent').innerHTML = content;
+            showStep('success');
+        }
+
+        // Simple step navigation
+        function showStep(stepId) {
+            console.log('showStep called with:', stepId);
+            console.log('Current step before change:', currentStep);
+            
+            // Hide current step
+            const currentStepElement = document.getElementById(currentStep);
+            if (currentStepElement) {
+                currentStepElement.classList.remove('active');
+                console.log('Hid step:', currentStep);
+            }
+            
+            // Show new step
+            const newStepElement = document.getElementById(stepId);
+            if (newStepElement) {
+                newStepElement.classList.add('active');
+                console.log('Showing step:', stepId);
+            } else {
+                console.error('Step not found:', stepId);
+            }
+            
+            // Update history
+            if (!stepHistory.includes(stepId)) {
+                stepHistory.push(stepId);
+            }
+            
+            currentStep = stepId;
+            
+            // Update progress bar
+            updateProgressBar();
+            
+            // Update breadcrumb
+            updateBreadcrumb(stepId);
+            
+            console.log('Updated currentStep to:', currentStep);
+            console.log('Step history:', stepHistory);
+        }
+
+        // Update progress bar based on current step
+        function updateProgressBar() {
+            const stepProgress = {
+                'step1': 20,
+                'step2': 40, 
+                'step3': 60,
+                'step4': 80,
+                'success': 100
+            };
+            
+            const progress = stepProgress[currentStep] || 20;
+            const progressFill = document.querySelector('.progress-fill');
+            
+            if (progressFill) {
+                progressFill.style.width = progress + '%';
+                console.log('Progress updated to:', progress + '%');
+            }
+        }
+
+        // Update breadcrumb based on current step
+        function updateBreadcrumb(stepId) {
+            const breadcrumbText = {
+                'step1': 'Start: Problem Identification',
+                'step2': 'Step 2: Immediate Action Required', 
+                'step3': 'Step 3: Documentation',
+                'step4': 'Step 4: Performance Management Level',
+                'success': 'Complete: Workflow Finished'
+            };
+            
+            const text = breadcrumbText[stepId] || 'Workflow';
+            const breadcrumb = document.querySelector('.breadcrumb');
+            
+            if (breadcrumb) {
+                breadcrumb.innerHTML = `<span class="breadcrumb-current">${text}</span>`;
+                console.log('Breadcrumb updated to:', text);
+            }
+        }
+
+        // Initialize progress bar on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgressBar();
+            
+            // Add hover effects to level cards
+            const levelCards = document.querySelectorAll('[onclick^="selectLevel"]');
+            levelCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+
+        // Go back function
+        function goBack() {
+            if (stepHistory.length > 1) {
+                stepHistory.pop(); // Remove current
+                const previousStep = stepHistory[stepHistory.length - 1];
+                showStep(previousStep);
+            }
+        }
+
+        // Add hover effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add hover effects to level cards
+            const levelCards = document.querySelectorAll('[onclick^="selectLevel"]');
+            levelCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-5px) scale(1.02)';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0) scale(1)';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procurement Workflow</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: none;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 40px 60px;
+            position: relative;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-content {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .dots-container {
+            position: absolute;
+            top: 30px;
+            left: 60px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot.green1 { background-color: #8BC34A; }
+        .dot.green2 { background-color: #4CAF50; }
+        .dot.green3 { background-color: #006400; }
+
+        .header h1 {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            font-size: 3.2em;
+            margin: 60px 0 20px 0;
+            line-height: 1.1;
+            color: white;
+        }
+
+        .header p {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            font-size: 1.3em;
+            opacity: 0.9;
+            line-height: 1.4;
+            margin: 0;
+        }
+
+        .header-visual {
+            flex: 0 0 300px;
+            height: 200px;
+            background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-visual::before {
+            content: '';
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .header-visual::after {
+            content: '';
+            position: absolute;
+            top: 60%;
+            right: 30%;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .workflow-container {
+            padding: 60px;
+            background: #ffffff;
+        }
+
+        .stage {
+            margin-bottom: 60px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #e9ecef;
+        }
+
+        .stage:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        .stage-header {
+            padding: 30px 40px;
+            cursor: pointer;
+            position: relative;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 400;
+            font-size: 1.4em;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            transition: all 0.3s ease;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .stage-header:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        }
+
+        .stage-number {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            background: #006400;
+            color: white;
+            border-radius: 50%;
+            line-height: 50px;
+            text-align: center;
+            margin-right: 20px;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .toggle-icon {
+            position: absolute;
+            right: 40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2em;
+            transition: transform 0.3s ease;
+            color: #006400;
+        }
+
+        .stage.expanded .toggle-icon {
+            transform: translateY(-50%) rotate(180deg);
+        }
+
+        .stage-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, padding 0.4s ease;
+            background: #ffffff;
+        }
+
+        .stage.expanded .stage-content {
+            max-height: 2000px;
+            padding: 40px;
+        }
+
+        .subsection {
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #006400;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .subsection-header {
+            padding: 25px 30px;
+            background: #f8f9fa;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 400;
+            color: #2c3e50;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 1.1em;
+        }
+
+        .steps-grid {
+            padding: 30px;
+            display: grid;
+            gap: 16px;
+            background: white;
+        }
+
+        .step {
+            padding: 18px 24px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #006400;
+            transition: all 0.3s ease;
+            position: relative;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            border: 1px solid #f1f3f4;
+        }
+
+        .step:hover {
+            background: #f8f9fa;
+            transform: translateX(4px);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .step-number {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 700;
+            color: #006400;
+            margin-right: 12px;
+        }
+
+        .step-text {
+            color: #2c3e50;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+        }
+
+        .sub-steps {
+            margin-top: 10px;
+            padding-left: 20px;
+            border-left: 2px solid #dee2e6;
+        }
+
+        .sub-step {
+            padding: 8px 0;
+            color: #5E5E5E;
+            font-size: 0.95em;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+        }
+
+        .optional {
+            font-style: italic;
+            color: #5E5E5E;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left-color: #006400;
+        }
+
+        .decision-point {
+            background: linear-gradient(135deg, #e6f3e6 0%, #d4f4d4 100%);
+            border-left-color: #006400;
+        }
+
+        .process-flow {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 50px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 400;
+            color: #2c3e50;
+            border: 2px solid #e9ecef;
+        }
+
+        .flow-arrow {
+            font-size: 2em;
+            color: #006400;
+            margin: 0 25px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+
+        .stage-description {
+            font-size: 1.1em;
+            color: #5E5E5E;
+            margin-top: 10px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            font-style: italic;
+        }
+
+        .highlight {
+            background: linear-gradient(135deg, #e6f3e6 0%, #d4f4d4 100%);
+            border-left-color: #006400 !important;
+        }
+
+        .navigation {
+            position: fixed;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            padding: 20px 10px;
+            z-index: 1000;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dee2e6;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background: #006400;
+            transform: scale(1.3);
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            color: #006400;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #5E5E5E;
+            margin-top: 5px;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 400;
+            font-size: 1.1em;
+        }
+
+        @media (max-width: 768px) {
+            .navigation {
+                display: none;
+            }
+            
+            .workflow-container {
+                padding: 20px;
+            }
+            
+            .stage-header {
+                padding: 20px 15px;
+                font-size: 1.1em;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="dots-container">
+                <span class="dot green1"></span>
+                <span class="dot green2"></span>
+                <span class="dot green3"></span>
+            </div>
+            <div class="header-content">
+                <h1>Procurement Workflow Guide</h1>
+                <p>A comprehensive visual guide through all procurement stages and processes</p>
+            </div>
+            <div class="header-visual"></div>
+        </div>
+
+        <div class="workflow-container">
+            <div class="overview-stats">
+                <div class="stat-card">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Main Stages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">50+</div>
+                    <div class="stat-label">Process Steps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">2</div>
+                    <div class="stat-label">Process Tracks</div>
+                </div>
+            </div>
+
+            <div class="stage stage-1" id="stage-1">
+                <div class="stage-header" onclick="toggleStage(1)">
+                    <span class="stage-number">1</span>
+                    NEED IDENTIFICATION
+                    <div class="stage-description">Understanding and defining your procurement requirements</div>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="stage-content">
+                    <div class="subsection">
+                        <div class="subsection-header">1.1 Understanding Your Needs</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">1.1.1</span>
+                                <span class="step-text">Define Problem Statement & Need</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">1.1.2</span>
+                                <span class="step-text">Check for Existing Agreements</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">1.1.3</span>
+                                <span class="step-text">Assess Risk</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">1.1.4</span>
+                                <span class="step-text">Assess Complexity</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">1.1.5</span>
+                                <span class="step-text">Estimate Cost ($)</span>
+                            </div>
+                            <div class="step decision-point">
+                                <span class="step-number">1.1.6</span>
+                                <span class="step-text">Decision Point (PO vs. Contract)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">1.1.7</span>
+                                <span class="step-text">Competitive Bidding Requirements</span>
+                            </div>
+                            <div class="step highlight">
+                                <span class="step-number">1.1.8</span>
+                                <span class="step-text">Nominate People to Formal Roles:</span>
+                                <div class="sub-steps">
+                                    <div class="sub-step">a) Relationship Manager (RM)</div>
+                                    <div class="sub-step">b) Contract Owner (CO)</div>
+                                    <div class="sub-step">c) Scope Owner (SO)</div>
+                                    <div class="sub-step">d) Works Supervisor (WS)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-flow">
+                <span>Need Identified</span>
+                <span class="flow-arrow">→</span>
+                <span>Strategy Development</span>
+            </div>
+
+            <div class="stage stage-2" id="stage-2">
+                <div class="stage-header" onclick="toggleStage(2)">
+                    <span class="stage-number">2</span>
+                    STRATEGY & SOURCING
+                    <div class="stage-description">Developing procurement strategy and managing the sourcing process</div>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="stage-content">
+                    <div class="subsection">
+                        <div class="subsection-header">2.1 Procurement Strategy <em>(Only Major Goods & Services)</em></div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">2.1.1</span>
+                                <span class="step-text">Analyse Internal Requirements & Demand</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.1.2</span>
+                                <span class="step-text">Spend Analysis</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.1.3</span>
+                                <span class="step-text">Identify Cost Drivers & Trends</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.1.4</span>
+                                <span class="step-text">Gather Market Intelligence</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.1.5</span>
+                                <span class="step-text">Assess Risk</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.1.6</span>
+                                <span class="step-text">Develop Procurement Strategy & Consult Stakeholders</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.1.7</span>
+                                <span class="step-text">Procurement Strategy Approvals</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">2.2 Sourcing Process <em>(All Tendered & Contracted Goods & Services)</em></div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">2.2.1</span>
+                                <span class="step-text">Initiate a Tender with Contracts & Procurement Team</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.2.2</span>
+                                <span class="step-text">Develop Specification or Scope of Work (SoW)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.2.3</span>
+                                <span class="step-text">Initiate & Contribute to "Supplier Qualification" process</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.2.4</span>
+                                <span class="step-text">Facilitate "Supplier Qualification" process</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.2.5</span>
+                                <span class="step-text">Develop Tender & Contract Documentation - <strong>Technical</strong></span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.2.6</span>
+                                <span class="step-text">Develop Tender & Contract Documentation - <strong>Commercial</strong></span>
+                            </div>
+                            <div class="step highlight">
+                                <span class="step-number">2.2.7</span>
+                                <span class="step-text">Develop Tender Evaluation Plan</span>
+                                <div class="sub-steps">
+                                    <div class="sub-step">2.2.7.1 Develop Cost Models (Evaluation)</div>
+                                    <div class="sub-step">2.2.7.2 Develop Evaluation Matrix (Criteria & Weightings)</div>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.2.8</span>
+                                <span class="step-text">Development Sourcing Strategy (Go-To-Market Approach)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">2.2.9</span>
+                                <span class="step-text">Issue & Manage Tender Process</span>
+                            </div>
+                            <div class="step optional">
+                                <span class="step-number">2.2.10</span>
+                                <span class="step-text">Facilitate Supplier Site or Work Inspections <em>(optional)</em></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-flow">
+                <span>Sourcing Complete</span>
+                <span class="flow-arrow">→</span>
+                <span>Evaluation & Award</span>
+            </div>
+
+            <div class="stage stage-3" id="stage-3">
+                <div class="stage-header" onclick="toggleStage(3)">
+                    <span class="stage-number">3</span>
+                    EVALUATION & AWARD
+                    <div class="stage-description">Evaluating proposals, negotiating terms, and awarding contracts</div>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="stage-content">
+                    <div class="subsection">
+                        <div class="subsection-header">3.1 Evaluation</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">3.1.1</span>
+                                <span class="step-text">Mandatory and Offer Confirmation</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3.1.2</span>
+                                <span class="step-text">Overall & Commercial Evaluation (including Probity)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3.1.3</span>
+                                <span class="step-text">Technical Evaluation (including HSEQ & Other Specialists)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3.1.4</span>
+                                <span class="step-text">Tender / Bid Clarifications</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">3.2 Negotiation</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">3.2.1</span>
+                                <span class="step-text">Negotiate & Refine Tenders (Develop Negotiation Plan)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">3.3 Contract Drafting</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">3.3</span>
+                                <span class="step-text">Compile Contract Document</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">3.4 Approvals</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">3.4</span>
+                                <span class="step-text">Develop "Recommendation for Contract Award" & facilitate Approvals</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">3.5 Contract Award</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">3.5.1</span>
+                                <span class="step-text">Facilitate Contract Execution Process</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">3.5.2</span>
+                                <span class="step-text">Operationalise Contract in Procurement Systems (e.g. ERP, CMS etc)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-flow">
+                <span>Contract Awarded</span>
+                <span class="flow-arrow">→</span>
+                <span>Supplier Management</span>
+            </div>
+
+            <div class="stage stage-4" id="stage-4">
+                <div class="stage-header" onclick="toggleStage(4)">
+                    <span class="stage-number">4</span>
+                    SUPPLIER MANAGEMENT
+                    <div class="stage-description">Managing supplier relationships and contract performance</div>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="stage-content">
+                    <div class="subsection">
+                        <div class="subsection-header">4.0 Introduction</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">4.0.1</span>
+                                <span class="step-text">Introduction</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.0.2</span>
+                                <span class="step-text">Supplier Relationship Management (SRM)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">4.1 Mobilisation & Transition</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">4.1.1</span>
+                                <span class="step-text">Transition Plan (TP)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.1.2</span>
+                                <span class="step-text">Mobilisation</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.1.3</span>
+                                <span class="step-text">Planning Matrix</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">4.2 Plan, Manage & Monitor</div>
+                        <div class="steps-grid">
+                            <div class="step highlight">
+                                <span class="step-number">4.2.1</span>
+                                <span class="step-text">Plan</span>
+                                <div class="sub-steps">
+                                    <div class="sub-step">4.2.1.1 Delivery Plans (DP)</div>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.2.2</span>
+                                <span class="step-text">Contract Summary Documents (CSD)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.2.3</span>
+                                <span class="step-text">Supplier Management Plans (SMP)</span>
+                            </div>
+                            <div class="step highlight">
+                                <span class="step-number">4.2.4</span>
+                                <span class="step-text">Manage (SRM)</span>
+                                <div class="sub-steps">
+                                    <div class="sub-step">4.2.4.1 Meetings</div>
+                                    <div class="sub-step">4.2.4.2 Transaction Process (Major Goods or Services)</div>
+                                    <div class="sub-step">4.2.4.3 Variations, Amendments & Notices</div>
+                                    <div class="sub-step">4.2.4.4 Non-conformances, Breaches and Disputes</div>
+                                    <div class="sub-step">4.2.4.5 Innovation & Continuous Improvement</div>
+                                </div>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.2.5</span>
+                                <span class="step-text">Monitor</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">4.3 Closeout & Transition</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">4.3.1</span>
+                                <span class="step-text">Closeout & Transition Plan (C&TP)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.3.2</span>
+                                <span class="step-text">Completion & Demobilisation</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.3.3</span>
+                                <span class="step-text">Inform stakeholders work is complete</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.3.4</span>
+                                <span class="step-text">Compile lessons learned</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">4.3.5</span>
+                                <span class="step-text">Provide feedback to Supplier</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-flow">
+                <span>Alternative Path for Minor Goods & Services</span>
+                <span class="flow-arrow">→</span>
+                <span>Transaction Process</span>
+            </div>
+
+            <div class="stage stage-5" id="stage-5">
+                <div class="stage-header" onclick="toggleStage(5)">
+                    <span class="stage-number">5</span>
+                    TRANSACTION PROCESS
+                    <div class="stage-description">Streamlined process for minor goods & services</div>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="stage-content">
+                    <div class="subsection">
+                        <div class="subsection-header">5.1 Purchase Orders for Goods and Services</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">5.1.1</span>
+                                <span class="step-text">Initiation</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">5.1.2</span>
+                                <span class="step-text">Competitive Bidding</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">5.1.3</span>
+                                <span class="step-text">Purchasing Card (P Card)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">5.2 Sourcing & Selection</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">5.2.1</span>
+                                <span class="step-text">Requesting & Evaluating Quotes</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">5.3 Raise Requisition/PO (Award)</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">5.3.1</span>
+                                <span class="step-text">Good Purchasing (catalogued)</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">5.3.2</span>
+                                <span class="step-text">Opex / Capex</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">5.3.3</span>
+                                <span class="step-text">Overseas and Foreign Exchange</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">5.3.4</span>
+                                <span class="step-text">Approve Release of PO</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">5.4 Manage & Monitor</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">5.4.1</span>
+                                <span class="step-text">Supplier Qualification</span>
+                            </div>
+                            <div class="step">
+                                <span class="step-number">5.4.2</span>
+                                <span class="step-text">Work Supervision</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="subsection">
+                        <div class="subsection-header">5.5 Inspect, Receipt & Payment</div>
+                        <div class="steps-grid">
+                            <div class="step">
+                                <span class="step-number">5.5.1</span>
+                                <span class="step-text">Receipting and Invoices</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process-flow">
+                <span>Process Complete</span>
+                <span class="flow-arrow">✓</span>
+                <span>Procurement Cycle Ends</span>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <div class="nav-dot active" onclick="scrollToStage(1)" title="Need Identification"></div>
+            <div class="nav-dot" onclick="scrollToStage(2)" title="Strategy & Sourcing"></div>
+            <div class="nav-dot" onclick="scrollToStage(3)" title="Evaluation & Award"></div>
+            <div class="nav-dot" onclick="scrollToStage(4)" title="Supplier Management"></div>
+            <div class="nav-dot" onclick="scrollToStage(5)" title="Transaction Process"></div>
+        </div>
+    </div>
+
+    <script>
+        function toggleStage(stageNumber) {
+            const stage = document.getElementById(`stage-${stageNumber}`);
+            stage.classList.toggle('expanded');
+            
+            // Update navigation
+            updateNavigation();
+        }
+
+        function scrollToStage(stageNumber) {
+            const stage = document.getElementById(`stage-${stageNumber}`);
+            stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            // Expand the stage if it's not already expanded
+            if (!stage.classList.contains('expanded')) {
+                stage.classList.add('expanded');
+            }
+            
+            // Update navigation
+            updateNavigation();
+        }
+
+        function updateNavigation() {
+            const navDots = document.querySelectorAll('.nav-dot');
+            const stages = document.querySelectorAll('.stage');
+            
+            // Reset all dots
+            navDots.forEach(dot => dot.classList.remove('active'));
+            
+            // Find the currently visible stage
+            let currentStage = 1;
+            const scrollPosition = window.scrollY + window.innerHeight / 2;
+            
+            stages.forEach((stage, index) => {
+                const rect = stage.getBoundingClientRect();
+                const stageTop = rect.top + window.scrollY;
+                
+                if (scrollPosition >= stageTop) {
+                    currentStage = index + 1;
+                }
+            });
+            
+            // Activate the current stage dot
+            if (navDots[currentStage - 1]) {
+                navDots[currentStage - 1].classList.add('active');
+            }
+        }
+
+        // Update navigation on scroll
+        window.addEventListener('scroll', updateNavigation);
+        
+        // Initialize - expand first stage by default
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleStage(1);
+            updateNavigation();
+        });
+
+        // Add click handlers for better UX
+        document.querySelectorAll('.step').forEach(step => {
+            step.addEventListener('click', function() {
+                this.style.transform = 'translateX(8px)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+            });
+        });
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            const currentActive = document.querySelector('.nav-dot.active');
+            const allDots = document.querySelectorAll('.nav-dot');
+            const currentIndex = Array.from(allDots).indexOf(currentActive);
+            
+            if (e.key === 'ArrowUp' && currentIndex > 0) {
+                scrollToStage(currentIndex);
+                e.preventDefault();
+            } else if (e.key === 'ArrowDown' && currentIndex < allDots.length - 1) {
+                scrollToStage(currentIndex + 2);
+                e.preventDefault();
+            }
+        });
+
+        // Add search functionality - REMOVED
+        // function createSearchBox() {
+        //     // Search functionality removed as requested
+        // }
+        
+        // Initialize search
+        // createSearchBox(); // Removed search functionality
+    </script>
+</body>
+</html>
